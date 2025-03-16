@@ -5,15 +5,20 @@ public class Menu {
     {
         JSONManager manager = new JSONManager();
         Scanner s = new Scanner(System.in);
-        String command = "";
+        String commandLine = "";
+        String[] command;
         do {
-            command = s.nextLine(); // Reading command
-            switch (command) //Chooses command and runs it
+            commandLine = s.nextLine();
+            command = commandLine.split(" ");
+            switch (command[0])
             {
                 case "open":
                 {
-                    String filepath = s.nextLine();
-                    manager.openFile(filepath);
+                    if (command.length >1) {
+                        String filepath = command[1];
+                        manager.openFile(filepath);
+                    }
+                    else System.out.println("please enter path");
                 }break;
                 case "close":manager.closeFile();break;
                 case "save":System.out.println("save");break;
@@ -26,10 +31,10 @@ public class Menu {
                 case "create":System.out.println("create");break;
                 case "delete": System.out.println("delete");break;
                 case "move":System.out.println("move");break;
-                case "exit":break;
+                case "exit", "":break;
                 default: System.out.println("Nevalidna komanda, opitaite pak ili izpolzvaite 'help' za pomosht");break;
             }
-        }while(!command.equals("exit"));
+        }while(!command[0].equals("exit"));
     }
 
     private static void help()

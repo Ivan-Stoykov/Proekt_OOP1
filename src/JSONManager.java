@@ -5,11 +5,13 @@ public class JSONManager {
     private File jsonFile;
     private boolean fileSelected;
     private String filename;
+    private Validation validation;
 
     public JSONManager() {
         jsonFile = new File("temp.txt");
         this.fileSelected = false;
         this.filename = "";
+        validation = new Validation();
     }
 
     public void openFile(String path)
@@ -45,6 +47,11 @@ public class JSONManager {
         }
         else System.out.println("Could not find that file. Try again");
 
+    }
+
+    public void validate()
+    {
+        validation.validate(jsonFile);
     }
 
     public void printFile()

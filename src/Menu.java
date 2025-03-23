@@ -24,7 +24,7 @@ public class Menu {
                 case "save":System.out.println("save");break;
                 case "save_as":System.out.println("save as");break;
                 case "help":help();break;
-                case "validate":System.out.println("validate");break;
+                case "validate": manager.validate();break;
                 case "print": manager.printFile();break;
                 case "search":System.out.println("search");break;
                 case "set":System.out.println("set");break;

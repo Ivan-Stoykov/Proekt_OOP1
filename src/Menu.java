@@ -27,10 +27,31 @@ public class Menu {
                 case "validate": manager.validate();break;
                 case "print": manager.printFile();break;
                 case "search":System.out.println("search");break;
-                case "set":System.out.println("set");break;
-                case "create":System.out.println("create");break;
-                case "delete": System.out.println("delete");break;
-                case "move":System.out.println("move");break;
+                case "set":if (command.length >1) {
+                    String filepath = command[1];
+                    String text = command[2];
+                    manager.set(filepath, text);
+                }
+                else System.out.println("please enter 2 paths");break;
+                case "create":{
+                    if (command.length >1) {
+                        String filepath = command[1];
+                        String text = command[2];
+                        manager.create(filepath, text);
+                    }
+                    else System.out.println("please enter path");
+                }break;
+                case "delete": if (command.length >1) {
+                    String filepath = command[1];
+                    manager.delete(filepath);
+                }
+                else System.out.println("please enter path");break;
+                case "move":if (command.length >1) {
+                    String from = command[1];
+                    String to = command[2];
+                    manager.move(from, to);
+                }
+                else System.out.println("please enter 2 paths");break;
                 case "exit", "":break;
                 default: System.out.println("Nevalidna komanda, opitaite pak ili izpolzvaite 'help' za pomosht");break;
             }

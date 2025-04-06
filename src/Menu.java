@@ -21,8 +21,15 @@ public class Menu {
                     else System.out.println("please enter path");
                 }break;
                 case "close":manager.closeFile();break;
-                case "save":System.out.println("save");break;
-                case "save_as":System.out.println("save as");break;
+                case "save":if (command.length >1) {
+                    String filepath = command[1];
+                    manager.save(filepath);}break;
+                case "saveas":if (command.length >1) {
+                    String name = command[1];
+                    String filepath = "";
+                    if (command.length > 2)filepath = command[2];
+                    manager.saveAs(name, filepath);
+                }break;
                 case "help":help();break;
                 case "validate": manager.validate();break;
                 case "print": manager.printFile();break;

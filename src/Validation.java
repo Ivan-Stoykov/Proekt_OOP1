@@ -4,6 +4,7 @@ import java.io.FileReader;
 import java.io.IOException;
 
 public class Validation {
+    private boolean checkedBrackets;
     private JSONMessage jsonMessage;
 
     public Validation() {
@@ -22,6 +23,7 @@ public class Validation {
                 if (ch == '"') isValid = ValidateString(check);
                 else if (ch == 't' || ch == 'f' || ch =='n') isValid = ValidateIsBooleanOrNull(check);
                 else if (ch == '-' || Character.isDigit(ch)) isValid = ValidateDigit(check);
+                else if (ch == '[') isValid = ValidateArray(check);
                 else isValid = false;
                 if (!isValid) jsonMessage.setMessage("Expecting 'STRING', 'NUMBER', 'NULL', 'TRUE', 'FALSE', '{', '[', got 'undefined'");
                 else jsonMessage.setMessage("VALID JSON!");
@@ -77,6 +79,87 @@ public class Validation {
         }
         check.setLength(0);
         return isDigit;
+    }
+    public boolean ValidateArray(StringBuilder check) throws IOException
+    {
+        checkedBrackets = false;
+        if (checkedBrackets) {
+            checkedBrackets = false;
+            jsonMessage.setMessage("Expecting ',', ']', got 'EOF'");
+        }
+        if (!validateSquareBrackets(check))
+        {
+            return false;
+        }
+        boolean isValid = true, stringOpened = false, foundErrorValue = false;
+        String[] string = check.toString().split("");
+        StringBuilder value = new StringBuilder();
+        int index = 1;
+        String erroredValue = "";
+        while(index < string.length && !string[index].equals("]"))
+        {
+            if (string[index].equals("\"") && !stringOpened) stringOpened = true;
+            else if(string[index].equals("\"") && stringOpened) stringOpened = false;
+            if (stringOpened||!string[index].equals(","))
+            {
+                value.append(string[index]);
+            }
+            if (string[index].equals(",") && !stringOpened)
+            {
+                erroredValue = value.toString();
+                if (value.charAt(0) == '"') isValid = ValidateString(value);
+                    //else if (value.charAt(0) == '{') isObject = true;
+                else if (value.charAt(0) == '[') isValid = ValidateArray(value);
+                else if (value.charAt(0) == 't' || value.charAt(0) == 'f' || value.charAt(0) == 'n') isValid = ValidateIsBooleanOrNull(value);
+                else if (value.charAt(0) == '-' || Character.isDigit(value.charAt(0))) isValid = ValidateDigit(value);
+                else {
+                    isValid = false;
+                    foundErrorValue = true;
+                }
+
+            }
+            if (!isValid) break;
+            index++;
+            if (index == string.length) break;
+        }
+        if (!value.isEmpty())
+        {
+            if (value.charAt(0) == '"') isValid = ValidateString(value);
+                //else if (value.charAt(0) == '{') isObject = true;
+            else if (value.charAt(0) == '[') isValid = ValidateArray(value);
+            else if (value.charAt(0) == 't' || value.charAt(0) == 'f' || value.charAt(0) == 'n') isValid = ValidateIsBooleanOrNull(value);
+            else if (value.charAt(0) == '-' || Character.isDigit(value.charAt(0))) isValid = ValidateDigit(value);
+            else
+            {
+                isValid = false;
+                foundErrorValue = true;
+                erroredValue = value.toString();
+            }
+        }
+
+        if (foundErrorValue)
+        {
+            System.out.println("Error at: " + erroredValue);
+            return false;
+        }
+        else return true;
+
+
+    }
+
+    private boolean validateSquareBrackets(StringBuilder check)
+    {
+        int brackets = 0;
+        String[] string = check.toString().split("");
+        for (int i = 0; i < string.length; i++) {
+            if (string[i].equals("[")) brackets++;
+            else if(string[i].equals("]")) brackets--;
+        }
+        if (brackets != 0) {
+            checkedBrackets = true;
+            return false;
+        }
+        else return true;
     }
 
 

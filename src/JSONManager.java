@@ -5,13 +5,14 @@ import java.nio.file.Path;
 public class JSONManager {
 
     private File jsonFile;
-    private boolean fileSelected;
+    private File selectedFile;
+    private boolean isFileSelected;
     private String filename;
     private Validation validation;
 
     public JSONManager() {
         jsonFile = new File("temp.txt");
-        this.fileSelected = false;
+        this.isFileSelected = false;
         this.filename = "";
         validation = new Validation();
     }
@@ -19,12 +20,12 @@ public class JSONManager {
     public void openFile(String path)
     {
         boolean openQuotes = false;
-        File selectFile = new File(path);
-        filename = selectFile.getName();
-        if (selectFile.isFile())
+        selectedFile = new File(path);
+        filename = selectedFile.getName();
+        if (selectedFile.isFile())
         {
-            fileSelected = true;
-            try (BufferedReader reader = new BufferedReader(new FileReader(selectFile));
+            isFileSelected = true;
+            try (BufferedReader reader = new BufferedReader(new FileReader(selectedFile));
                  BufferedWriter writer = new BufferedWriter(new FileWriter(jsonFile))) {
                 String line;
                 while ((line = reader.readLine()) != null) {
@@ -58,7 +59,7 @@ public class JSONManager {
 
     public void printFile()
     {
-        if (fileSelected)
+        if (isFileSelected)
         {
             int tabs = 0;
             StringBuilder content = new StringBuilder();
@@ -114,15 +115,15 @@ public class JSONManager {
 
     public void closeFile()
     {
-        if (fileSelected) System.out.println("Closed " + filename);
+        if (isFileSelected) System.out.println("Closed " + filename);
         else System.out.println("Please open a file first");
-        this.fileSelected = false;
+        this.isFileSelected = false;
     }
 
     public void move(String from, String to)
     {
         openFile(from);
-        if (fileSelected)
+        if (isFileSelected)
         {
             try(BufferedReader reader = new BufferedReader(new FileReader(jsonFile)))
             {
@@ -232,4 +233,32 @@ public class JSONManager {
         if (selectFile.isFile())selectFile.delete();
         else System.out.println("File does not exist");
     }
+
+    public void save(String path) {
+        saveAs("", path);
+    }
+
+    public void saveAs(String name, String path)
+    {
+        if (isFileSelected)
+        {
+            if (path.isBlank()) path = selectedFile.getParent();
+            System.out.println(path);
+            if (name.isBlank()) name = selectedFile.getName();
+            System.out.println(name);
+            path += "/" + name;
+            try
+            {
+                BufferedReader reader = new BufferedReader(new FileReader(jsonFile));
+                String text = reader.readLine();
+                create(path, text);
+            }
+            catch(Exception e)
+            {
+                System.out.println(e.getMessage());
+            }
+        }
+    }
+
+
 }

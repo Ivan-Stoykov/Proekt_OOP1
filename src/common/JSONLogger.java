@@ -1,7 +1,9 @@
-public class JSONMessage {
+package common;
+
+public class JSONLogger {
     private String message;
 
-    public JSONMessage() {
+    public JSONLogger() {
         this.message = "VALID JSON!";
     }
     public String getMessage() {

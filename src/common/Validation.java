@@ -1,3 +1,5 @@
+package common;
+
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
@@ -5,10 +7,10 @@ import java.io.IOException;
 
 public class Validation {
     private boolean checkedBrackets;
-    private JSONMessage jsonMessage;
+    private JSONLogger jsonLogger;
 
     public Validation() {
-        jsonMessage = new JSONMessage();
+        jsonLogger = new JSONLogger();
     }
 
     public void validate(File jsonFile)
@@ -25,9 +27,9 @@ public class Validation {
                 else if (ch == '-' || Character.isDigit(ch)) isValid = ValidateDigit(check);
                 else if (ch == '[') isValid = ValidateArray(check);
                 else isValid = false;
-                if (!isValid) jsonMessage.setMessage("Expecting 'STRING', 'NUMBER', 'NULL', 'TRUE', 'FALSE', '{', '[', got 'undefined'");
-                else jsonMessage.setMessage("VALID JSON!");
-                System.out.println(jsonMessage.getMessage());
+                if (!isValid) jsonLogger.setMessage("Expecting 'STRING', 'NUMBER', 'NULL', 'TRUE', 'FALSE', '{', '[', got 'undefined'");
+                else jsonLogger.setMessage("VALID JSON!");
+                System.out.println(jsonLogger.getMessage());
             }
             catch (IOException e) {e.printStackTrace();}
     }
@@ -56,7 +58,7 @@ public class Validation {
     public boolean ValidateIsBooleanOrNull(StringBuilder check) throws IOException
     {
         if (!check.toString().equals("true") && !check.toString().equals("false") && !check.toString().equals("null")) {
-            jsonMessage.setMessage("Error at value: "+check.toString()+": Expecting 'STRING', 'NUMBER', 'NULL', 'TRUE', 'FALSE', '{', '[', got 'undefined'");
+            jsonLogger.setMessage("Error at value: "+check.toString()+": Expecting 'STRING', 'NUMBER', 'NULL', 'TRUE', 'FALSE', '{', '[', got 'undefined'");
             return false;
         }
         else {
@@ -73,7 +75,7 @@ public class Validation {
             if (!Character.isDigit(string[i].charAt(0)))
             {
                 isDigit = false;
-                jsonMessage.setMessage("Error at value "+ check.toString() +": Expecting 'STRING', 'NUMBER', 'NULL', 'TRUE', 'FALSE', '{', '[', got 'undefined'");
+                jsonLogger.setMessage("Error at value "+ check.toString() +": Expecting 'STRING', 'NUMBER', 'NULL', 'TRUE', 'FALSE', '{', '[', got 'undefined'");
                 break;
             }
         }
@@ -85,7 +87,7 @@ public class Validation {
         checkedBrackets = false;
         if (checkedBrackets) {
             checkedBrackets = false;
-            jsonMessage.setMessage("Expecting ',', ']', got 'EOF'");
+            jsonLogger.setMessage("Expecting ',', ']', got 'EOF'");
         }
         if (!validateSquareBrackets(check))
         {

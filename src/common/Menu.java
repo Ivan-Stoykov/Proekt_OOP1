@@ -36,9 +36,9 @@ public class Menu {
                 {
                     System.out.println(e.getMessage());
                 }
-                default: System.out.println("Nevalidna komanda, opitaite pak ili izpolzvaite 'help' za pomosht");break;
             }
-        }while(!command[0].equals("exit"));
+            else System.out.println("Invalid command. Use 'help' for help.");
+        }
     }
     private void loadCommands() {
         this.commands.put("open", new OpenCommand(this.manager));

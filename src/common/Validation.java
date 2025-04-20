@@ -1,168 +1,136 @@
 package common;
 
-import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileReader;
 import java.io.IOException;
 
 public class Validation {
-    private boolean checkedBrackets;
-    private JSONLogger jsonLogger;
+    private String json;
+    private int index;
 
-    public Validation() {
-        jsonLogger = new JSONLogger();
+    public Validation(String json) {
+        this.json = json;
+        this.index = 0;
     }
 
-    public void validate(File jsonFile)
+    public boolean validate()
     {
-
-            boolean isValid = true;
-            try(BufferedReader reader = new BufferedReader(new FileReader(jsonFile)))
-            {
-                int c =reader.read();
-                char ch = (char) c;
-                StringBuilder check = ReadFile.readFile(jsonFile);
-                if (ch == '"') isValid = ValidateString(check);
-                else if (ch == 't' || ch == 'f' || ch =='n') isValid = ValidateIsBooleanOrNull(check);
-                else if (ch == '-' || Character.isDigit(ch)) isValid = ValidateDigit(check);
-                else if (ch == '[') isValid = ValidateArray(check);
-                else isValid = false;
-                if (!isValid) jsonLogger.setMessage("Expecting 'STRING', 'NUMBER', 'NULL', 'TRUE', 'FALSE', '{', '[', got 'undefined'");
-                else jsonLogger.setMessage("VALID JSON!");
-                System.out.println(jsonLogger.getMessage());
-            }
-            catch (IOException e) {e.printStackTrace();}
-    }
-
-    public boolean ValidateString(StringBuilder check) throws IOException
-    {
-        String[] string = check.toString().split("");
-        boolean closedString = false;
-        int quoteCounter = 1;
-        for (int i = 1; i < string.length; i++) {
-            if (string[i].equals("\"") && !string[i-1].equals("\\"))
-            {
-                closedString = true;
-                quoteCounter++;
-            }
-        }
-        if (quoteCounter != 2 && !closedString)
+        try
         {
-            return false;
-        }
-        else {
-            check.setLength(0);
+            validateValue();
             return true;
-        }
-    }
-    public boolean ValidateIsBooleanOrNull(StringBuilder check) throws IOException
-    {
-        if (!check.toString().equals("true") && !check.toString().equals("false") && !check.toString().equals("null")) {
-            jsonLogger.setMessage("Error at value: "+check.toString()+": Expecting 'STRING', 'NUMBER', 'NULL', 'TRUE', 'FALSE', '{', '[', got 'undefined'");
+        } catch (JSONException e) {
+            System.out.println(e.getMessage());
             return false;
-        }
-        else {
-            check.setLength(0);
-            return true;
         }
     }
 
-    public boolean ValidateDigit(StringBuilder check) throws IOException
+    private void validateValue() throws JSONException
     {
-        boolean isDigit = true;
-        String[] string = check.toString().split("");
-        for (int i = 1; i < string.length; i++) {
-            if (!Character.isDigit(string[i].charAt(0)))
+        if (index >= json.length()) throw new JSONException("Unexpected end of input at index " + index);
+        char c = json.charAt(index);
+        if (c == '"') {
+            validateString();
+            return;
+        }
+        if (c == '{'){
+            validateObject();
+            return;
+        }
+        if (c == '['){
+            validateArray();
+            return;
+        }
+        if (Character.isDigit(c) || c == '-'){
+            validateDigit();
+            return;
+        }
+        if (json.startsWith("true", index)) {
+            index += 4;
+            return;
+        }
+        if (json.startsWith("false", index)) {
+            index += 5;
+            return;
+        }
+        if (json.startsWith("null", index)) {
+            index += 4;
+            return;
+        }
+
+        throw new JSONException("Invalid value at index " + index);
+    }
+
+    public void validateString() throws JSONException
+    {
+        if (json.charAt(index) != '"') throw new JSONException("Expected '\"' at index " + index);
+        index++;
+        while (index < json.length())
+        {
+            char c = json.charAt(index++);
+            if (c == '"') return;
+        }
+        throw new JSONException("Unclosed string at index " + index);
+    }
+
+    public void validateDigit() throws JSONException
+    {
+        if (json.charAt(index) == '-') index++;
+        while (index < json.length() && Character.isDigit(json.charAt(index))) index++;
+        if (index < json.length()&& json.charAt(index) == '.')
+        {
+            index++;
+            if (index >= json.length() || !Character.isDigit(json.charAt(index)))
+                throw new JSONException("Invalid number format at index " + index);
+            while (index < json.length() && Character.isDigit(json.charAt(index))) index++;
+        }
+    }
+
+    public void validateArray() throws JSONException
+    {
+        if (json.charAt(index) != '[') throw new JSONException("Expected '[' at index " + index);
+        index++; // skip '['
+        if (index < json.length() && json.charAt(index) == ']')
+        {
+            index++;
+            return;
+        }
+
+        while(true) {
+            validateValue();
+            if (index < json.length() && json.charAt(index) == ',') index++;
+            else if (index < json.length() && json.charAt(index) == ']')
             {
-                isDigit = false;
-                jsonLogger.setMessage("Error at value "+ check.toString() +": Expecting 'STRING', 'NUMBER', 'NULL', 'TRUE', 'FALSE', '{', '[', got 'undefined'");
+                index++;
                 break;
             }
-        }
-        check.setLength(0);
-        return isDigit;
-    }
-    public boolean ValidateArray(StringBuilder check) throws IOException
-    {
-        checkedBrackets = false;
-        if (checkedBrackets) {
-            checkedBrackets = false;
-            jsonLogger.setMessage("Expecting ',', ']', got 'EOF'");
-        }
-        if (!validateSquareBrackets(check))
-        {
-            return false;
-        }
-        boolean isValid = true, stringOpened = false, foundErrorValue = false;
-        String[] string = check.toString().split("");
-        StringBuilder value = new StringBuilder();
-        int index = 1;
-        String erroredValue = "";
-        while(index < string.length && !string[index].equals("]"))
-        {
-            if (string[index].equals("\"") && !stringOpened) stringOpened = true;
-            else if(string[index].equals("\"") && stringOpened) stringOpened = false;
-            if (stringOpened||!string[index].equals(","))
-            {
-                value.append(string[index]);
-            }
-            if (string[index].equals(",") && !stringOpened)
-            {
-                erroredValue = value.toString();
-                if (value.charAt(0) == '"') isValid = ValidateString(value);
-                    //else if (value.charAt(0) == '{') isObject = true;
-                else if (value.charAt(0) == '[') isValid = ValidateArray(value);
-                else if (value.charAt(0) == 't' || value.charAt(0) == 'f' || value.charAt(0) == 'n') isValid = ValidateIsBooleanOrNull(value);
-                else if (value.charAt(0) == '-' || Character.isDigit(value.charAt(0))) isValid = ValidateDigit(value);
-                else {
-                    isValid = false;
-                    foundErrorValue = true;
-                }
+            else throw new JSONException("Expected ',' or ']' in array at index " + index);
 
-            }
-            if (!isValid) break;
+        }
+    }
+
+    private void validateObject() throws JSONException
+    {
+        if (json.charAt(index) != '{') throw new JSONException("Expected '{' at index " + index);
+        index++;
+        if (index < json.length() && json.charAt(index) == '}')
+        {
             index++;
-            if (index == string.length) break;
+            return;
         }
-        if (!value.isEmpty())
-        {
-            if (value.charAt(0) == '"') isValid = ValidateString(value);
-                //else if (value.charAt(0) == '{') isObject = true;
-            else if (value.charAt(0) == '[') isValid = ValidateArray(value);
-            else if (value.charAt(0) == 't' || value.charAt(0) == 'f' || value.charAt(0) == 'n') isValid = ValidateIsBooleanOrNull(value);
-            else if (value.charAt(0) == '-' || Character.isDigit(value.charAt(0))) isValid = ValidateDigit(value);
-            else
-            {
-                isValid = false;
-                foundErrorValue = true;
-                erroredValue = value.toString();
+
+        while(true) {
+            if (index >= json.length() || json.charAt(index) != '"') throw new JSONException("Expected string key at index " + index);
+            validateString();
+            if (index >= json.length() || json.charAt(index) != ':') throw new JSONException("Expected ':' at index " + index);
+            index++;
+            validateValue();
+            if (index < json.length() && json.charAt(index) == ',') index++;
+            else if (index < json.length() && json.charAt(index) == '}') {
+                index++;
+                break;
             }
+            else throw new JSONException("Expected ',' or '}' in object at index " + index);
         }
-
-        if (foundErrorValue)
-        {
-            System.out.println("Error at: " + erroredValue);
-            return false;
-        }
-        else return true;
-
-
     }
-
-    private boolean validateSquareBrackets(StringBuilder check)
-    {
-        int brackets = 0;
-        String[] string = check.toString().split("");
-        for (int i = 0; i < string.length; i++) {
-            if (string[i].equals("[")) brackets++;
-            else if(string[i].equals("]")) brackets--;
-        }
-        if (brackets != 0) {
-            checkedBrackets = true;
-            return false;
-        }
-        else return true;
-    }
-
 
 }

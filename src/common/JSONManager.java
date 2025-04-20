@@ -11,12 +11,13 @@ public class JSONManager {
     private boolean isFileSelected;
     private String filename;
     private Validation validation;
+    private Object json;
+    private JSONSetter jsonSetter;
 
     public JSONManager() {
         jsonFile = new File("temp.txt");
         this.isFileSelected = false;
         this.filename = "";
-        validation = new Validation();
     }
 
     public void openFile(String path)
@@ -26,7 +27,7 @@ public class JSONManager {
         filename = selectedFile.getName();
         if (selectedFile.isFile())
         {
-            isFileSelected = true;
+
             try (BufferedReader reader = new BufferedReader(new FileReader(selectedFile));
                  BufferedWriter writer = new BufferedWriter(new FileWriter(jsonFile))) {
                 String line;
@@ -45,33 +46,67 @@ public class JSONManager {
                         else writer.write(lineChars[i]);
                     }
                 }
-            } catch (Exception e) {
-                e.printStackTrace();
+            } catch (IOException e) {
+                System.out.println(e.getMessage());
             }
-            System.out.println("Opened " + filename);
+            if (validate())
+            {
+                isFileSelected = true;
+                setJson();
+                System.out.println("Opened " + filename);
+            }
         }
         else System.out.println("Could not find that file. Try again");
 
     }
 
-    public void validate()
+    public boolean validate()
     {
-        validation.validate(jsonFile);
+        try
+        {
+            BufferedReader reader = new BufferedReader(new FileReader(jsonFile));
+            validation = new Validation(reader.readLine());
+            return validation.validate();
+        }
+        catch (IOException e)
+        {
+            System.out.println(e.getMessage());
+        }
+        return false;
+    }
+
+    public void setJson()
+    {
+        try
+        {
+            BufferedReader reader = new BufferedReader(new FileReader(jsonFile));
+            jsonSetter = new JSONSetter(reader.readLine());
+            json = jsonSetter.getJson();
+        }
+        catch (IOException e)
+        {
+            System.out.println(e.getMessage());
+        }
     }
 
     public void printFile()
     {
         if (isFileSelected)
         {
+            boolean inQuotes=false;
+            StringBuilder text = new StringBuilder();
+            for (int i = 0; i < json.toString().length(); i++) {
+                if (json.toString().charAt(i) == '"') inQuotes = !inQuotes;
+                if (json.toString().charAt(i) == ' ' && !inQuotes) continue;
+                if (json.toString().charAt(i) == '=' && !inQuotes){
+                    text.append(':');
+                    continue;
+                }
+                text.append(json.toString().charAt(i));
+            }
             int tabs = 0;
             StringBuilder content = new StringBuilder();
-            try
-            {
-                BufferedReader reader = new BufferedReader(new FileReader(jsonFile));
-                String line;
-                while ((line = reader.readLine()) != null)
-                {
-                    String[] lineChars = line.split("");
+                    String[] lineChars = text.toString().split("");
                     for (int i = 0; i < lineChars.length; i++)
                     {
                         if (lineChars[i].equals("{") || lineChars[i].equals("["))
@@ -89,20 +124,13 @@ public class JSONManager {
 
                         }
                         else if (lineChars[i].equals(":"))content.append(lineChars[i] + " ");
-                        else if (lineChars[i].equals(",") && (lineChars[i-1].equals("\"") || lineChars[i-1].equals("}")))
+                        else if (lineChars[i].equals(","))
                         {
                             content.append(",\n");
                             addTabs(tabs, content);
                         }
-                        else if (lineChars[i].equals("\n") || lineChars[i].equals("\t"))continue;
                         else content.append(lineChars[i]);
                     }
-                }
-            }
-            catch (IOException e)
-            {
-                System.out.println(e.getMessage());
-            }
             System.out.println(content);
         }
         else System.out.println("Please open a file first");

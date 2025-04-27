@@ -7,7 +7,11 @@ public class Validation {
     private String json;
     private int index;
 
-    public Validation(String json) {
+    public Validation() {
+        this.index = 0;
+    }
+
+    public void setJson(String json) {
         this.json = json;
         this.index = 0;
     }
@@ -60,7 +64,7 @@ public class Validation {
         throw new JSONException("Invalid value at index " + index);
     }
 
-    public void validateString() throws JSONException
+    private void validateString() throws JSONException
     {
         if (json.charAt(index) != '"') throw new JSONException("Expected '\"' at index " + index);
         index++;
@@ -72,7 +76,7 @@ public class Validation {
         throw new JSONException("Unclosed string at index " + index);
     }
 
-    public void validateDigit() throws JSONException
+    private void validateDigit() throws JSONException
     {
         if (json.charAt(index) == '-') index++;
         while (index < json.length() && Character.isDigit(json.charAt(index))) index++;
@@ -85,10 +89,10 @@ public class Validation {
         }
     }
 
-    public void validateArray() throws JSONException
+    private void validateArray() throws JSONException
     {
         if (json.charAt(index) != '[') throw new JSONException("Expected '[' at index " + index);
-        index++; // skip '['
+        index++;
         if (index < json.length() && json.charAt(index) == ']')
         {
             index++;

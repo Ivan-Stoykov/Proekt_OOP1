@@ -4,17 +4,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 
 public class JSONSetter {
-    private Object json;
-
-    public JSONSetter(String jsonText) {
-        this.json = parseJson(jsonText);
-    }
-
-    public Object getJson() {
-        return json;
-    }
-
-    private Object parseJson(String json) {
+    public Object parseJson(String json) {
         if (json.startsWith("[")) {
             return parseArray(json.substring(1, json.length() - 1));
         } else if (json.startsWith("{")) {
@@ -83,7 +73,7 @@ public class JSONSetter {
             if (c == '"') {
                 int valStart = ++i;
                 while (i < content.length() && (content.charAt(i) != '"')) i++;
-                value = content.substring(valStart, i++);
+                value = content.substring(valStart-1, ++i);
             } else if (c == '[') {
                 int start = i, brackets = 1;
                 i++;

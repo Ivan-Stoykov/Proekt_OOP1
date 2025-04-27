@@ -11,5 +11,11 @@ public class SearchCommand implements Command{
     }
     @Override
     public void execute(String... command) throws IOException {
+        if (command.length ==1)
+        {
+            String key = command[0];
+            manager.search(key);
+        }
+        else System.out.println("Command 'search' expects 1 argument");
     }
 }

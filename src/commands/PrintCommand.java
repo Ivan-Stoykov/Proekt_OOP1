@@ -13,9 +13,9 @@ public class PrintCommand implements Command{
     public void execute(String... command) throws IOException {
         if (command.length ==0)
         {
-            manager.printFile();
+            System.out.println(manager.printFile());
         }
-        else System.out.println("Command 'create' doesn't expect arguments");
+        else System.out.println("Command 'print' doesn't expect arguments");
 
     }
 }

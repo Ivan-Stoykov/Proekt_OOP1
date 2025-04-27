@@ -1,1 +1,1 @@
-{"Alice":{"da":[50,[69,"JSON"],60]}}
+{"Alice":{"da":[50,[69,"JSON"],60],"ne":"Drug obekt","ne":"Treti"},"Bernice":["masiv",true]}

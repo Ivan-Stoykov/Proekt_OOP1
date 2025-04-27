@@ -3,6 +3,7 @@ package common;
 import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.*;
 
 public class JSONManager {
 
@@ -18,6 +19,8 @@ public class JSONManager {
         jsonFile = new File("temp.txt");
         this.isFileSelected = false;
         this.filename = "";
+        validation = new Validation();
+        jsonSetter = new JSONSetter();
     }
 
     public void openFile(String path)
@@ -65,7 +68,7 @@ public class JSONManager {
         try
         {
             BufferedReader reader = new BufferedReader(new FileReader(jsonFile));
-            validation = new Validation(reader.readLine());
+            validation.setJson(reader.readLine());
             return validation.validate();
         }
         catch (IOException e)
@@ -80,8 +83,7 @@ public class JSONManager {
         try
         {
             BufferedReader reader = new BufferedReader(new FileReader(jsonFile));
-            jsonSetter = new JSONSetter(reader.readLine());
-            json = jsonSetter.getJson();
+            json = jsonSetter.parseJson(reader.readLine());
         }
         catch (IOException e)
         {
@@ -89,7 +91,7 @@ public class JSONManager {
         }
     }
 
-    public void printFile()
+    public String printFile()
     {
         if (isFileSelected)
         {
@@ -131,9 +133,10 @@ public class JSONManager {
                         }
                         else content.append(lineChars[i]);
                     }
-            System.out.println(content);
+            return content.toString();
         }
-        else System.out.println("Please open a file first");
+        else System.out.print("Please open a file first");
+        return "";
     }
 
     private void addTabs(int tabs, StringBuilder content)
@@ -148,6 +151,39 @@ public class JSONManager {
         if (isFileSelected) System.out.println("Closed " + filename);
         else System.out.println("Please open a file first");
         this.isFileSelected = false;
+    }
+
+    public void search(String key)
+    {
+        if (json instanceof HashMap)
+        {
+            key = "\"" + key + "\"";
+            if (((HashMap<String, Object>) json).containsKey(key))
+            {
+                if (((HashMap) json).get(key) instanceof HashMap)
+                {
+                    Set<Object> list  = ((HashMap) ((HashMap) json).get(key)).entrySet();
+                    for (Object value : list)
+                    {
+                        boolean inQuotes=false;
+                        StringBuilder text = new StringBuilder();
+                        for (int i = 0; i < value.toString().length(); i++) {
+                            if (value.toString().charAt(i) == '"') inQuotes = !inQuotes;
+                            if (value.toString().charAt(i) == ' ' && !inQuotes) continue;
+                            if (value.toString().charAt(i) == '=' && !inQuotes){
+                                text.append(':').append(' ');
+                                continue;
+                            }
+                            text.append(value.toString().charAt(i));
+                        }
+                        System.out.println(text);
+                    }
+                }
+                else System.out.println(((HashMap) json).get(key));
+            }
+            else System.out.println("This JSON object doesn't contain key: " + key);
+        }
+        else System.out.println("This JSON object doesn't have objects inside.");
     }
 
     public void move(String from, String to)
@@ -167,58 +203,88 @@ public class JSONManager {
         }
 
     }
+    private Object findKey(String path)
+    {
+        boolean foundKey = true;
+        String[] objects  = path.split("/");
+        Object currentObject = json;
+        for (int i = 0; i< objects.length-1; i++)
+        {
+            if (((HashMap)currentObject).containsKey("\"" + objects[i] + "\"") && currentObject instanceof HashMap)
+                currentObject = ((HashMap)currentObject).get("\"" + objects[i] + "\"");
+            else
+            {
+                foundKey = false;
+                break;
+            }
+        }
+        if (foundKey) return currentObject;
+        return null;
+    }
 
     public void set(String path, String text)
     {
-        int tabs = 0;
-        File file = new File(path);
-        StringBuilder content = new StringBuilder();
-        if (file.exists())
-        {
-            try (BufferedWriter writer = new BufferedWriter(new FileWriter(file))) {
-                String[] lineChars = text.split("");
-                for (int i = 0; i < lineChars.length; i++) {
-                    if (lineChars[i].equals("{") || lineChars[i].equals("[")) {
-                        content.append(lineChars[i] + "\n");
-                        tabs++;
-                        addTabs(tabs, content);
-                    } else if (lineChars[i].equals("}") || lineChars[i].equals("]")) {
-                        content.append("\n");
-                        tabs--;
-                        addTabs(tabs, content);
-                        content.append(lineChars[i]);
-
-                    } else if (lineChars[i].equals(":")) content.append(lineChars[i] + " ");
-                    else if (lineChars[i].equals(",") && (lineChars[i - 1].equals("\"") || lineChars[i - 1].equals("}"))) {
-                        content.append(",\n");
-                        addTabs(tabs, content);
-                    } else if (lineChars[i].equals("\n") || lineChars[i].equals("\t")) continue;
-                    else content.append(lineChars[i]);
-                }
-                for (int i = 0; i < content.length(); i++) {
-                    writer.write(content.charAt(i));
-                }
-                writer.close();
-                System.out.println("file set");
-            }
-                catch (IOException e)
+        String[] objects  = path.split("/");
+        Object currentObject = findKey(path);
+        if (currentObject instanceof HashMap && ((HashMap)currentObject).containsKey("\"" + objects[objects.length-1] + "\"")) {
+            validation.setJson(text);
+            if (validation.validate())
             {
-                System.out.println(e.getMessage());
+                ((HashMap)currentObject).put("\"" + objects[objects.length-1] + "\"",jsonSetter.parseJson(text) );
+                System.out.println("New value set for object: \"" + objects[objects.length-1] + "\".");
+                System.out.println(json);
             }
         }
-        else System.out.println("Could not find file");
+        else System.out.println("Object not found");
     }
 
     public void create(String path, String text)
     {
+        boolean checked = false;
+        String[] objects  = path.split("/");
+        Object currentObject = json;
+        for (int i = 0; i< objects.length-1; i++)
+        {
+            if (currentObject instanceof HashMap && ((HashMap)currentObject).containsKey("\"" + objects[i] + "\""))
+                currentObject = ((HashMap)currentObject).get("\"" + objects[i] + "\"");
+            else
+            {
+                if (currentObject instanceof HashMap)
+                {
+                     ((HashMap)currentObject).put("\"" + objects[i] + "\"", jsonSetter.parseJson("{}"));
+                     currentObject = ((HashMap)currentObject).get("\"" + objects[i] + "\"");
+                }
+                else {
+                    checked = true;
+                    System.out.println(objects[i-1] + " exists and is not an object.");
+                }
 
+            }
+        }
+
+        if (currentObject instanceof HashMap)
+        {if ( ((HashMap)currentObject).containsKey(objects[objects.length-1])){
+            System.out.println("Element"+objects[objects.length-1]+" already exists");
+        }
+        else
+        {
+
+                validation.setJson(text);
+                if (validation.validate()) ((HashMap)currentObject).put("\"" + objects[objects.length-1] + "\"", jsonSetter.parseJson(text));
+            }
+        }else if (!checked)System.out.println(objects[objects.length-1] + " exists and is not an object.");
     }
 
     public void delete(String path)
     {
-        File selectFile = new File(path);
-        if (selectFile.isFile())selectFile.delete();
-        else System.out.println("File does not exist");
+        String[] objects  = path.split("/");
+        Object currentObject = findKey(path);
+        if (currentObject instanceof HashMap)
+        {
+            ((HashMap) currentObject).remove("\"" + objects[objects.length-1] + "\"");
+            System.out.println("Deleted object: \"" + objects[objects.length-1] + "\".");
+        }
+        else System.out.println("Object does not exist");
     }
 
     public void save(String path) {
@@ -230,55 +296,21 @@ public class JSONManager {
         if (isFileSelected)
         {
             if (path.isBlank()) path = selectedFile.getParent();
-            System.out.println(path);
             if (name.isBlank()) name = selectedFile.getName();
-            System.out.println(name);
             path += "/" + name;
             try
             {
-                BufferedReader reader = new BufferedReader(new FileReader(jsonFile));
-                String text = reader.readLine();
-                int tabs = 0;
-                StringBuilder content = new StringBuilder();
-                String[] paths = path.split("/");
-                String path1 = "";
-                for (int i = 0; i < paths.length-1; i++) {
-                    if (paths[i].contains(":")) continue;
-                    path1 += ("/" + paths[i]);
-                    if (!Files.exists(Path.of(path1)))
-                        Files.createDirectory(Path.of(path1));
-                }
                 File selectFile = new File(path);
                 if (!selectFile.createNewFile()) {
                     System.out.println("File already exists: " + selectFile.getName());
                 } else {
                     BufferedWriter writer = new BufferedWriter(new FileWriter(selectFile));
-                    String[] lineChars = text.split("");
-                    for (int i = 0; i < lineChars.length; i++) {
-                        if (lineChars[i].equals("{") || lineChars[i].equals("[")) {
-                            content.append(lineChars[i] + "\n");
-                            tabs++;
-                            addTabs(tabs, content);
-                        } else if (lineChars[i].equals("}") || lineChars[i].equals("]")) {
-                            content.append("\n");
-                            tabs--;
-                            addTabs(tabs, content);
-                            content.append(lineChars[i]);
-
-                        } else if (lineChars[i].equals(":")) content.append(lineChars[i] + " ");
-                        else if (lineChars[i].equals(",") && (lineChars[i - 1].equals("\"") || lineChars[i - 1].equals("}"))) {
-                            content.append(",\n");
-                            addTabs(tabs, content);
-                        } else if (lineChars[i].equals("\n") || lineChars[i].equals("\t")) continue;
-                        else content.append(lineChars[i]);
-                    }
-                    for (int i = 0; i < content.length(); i++) {
-                        writer.write(content.charAt(i));
-                    }
+                    writer.write(printFile());
                     writer.close();
+                    System.out.println("File saved as " + name + " at " + path);
                 }
             }
-            catch(Exception e)
+            catch(IOException e)
             {
                 System.out.println(e.getMessage());
             }

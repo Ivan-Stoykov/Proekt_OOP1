@@ -2,44 +2,59 @@ package common;
 
 import commands.*;
 
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Scanner;
 
+/**
+ * Клас, който управлява менюто на програмата.
+ */
 public class Menu {
     private JSONManager manager;
     private HashMap<String, Command> commands;
 
+    /**
+     * Конструктор, зареждащ класа за обработване на команди {@code JSONManager} и списъка с команди .
+     */
     public Menu() {
         manager = new JSONManager();
         commands = new HashMap<>();
         loadCommands();
     }
 
+    /**
+     * Метод, който чете команди и входни данни и ги обработва.
+     * При въвеждане на команда, тя се изпълнява и се обработва за грешки.
+     */
     public void startMenu() // common.Menu function
     {
         Scanner s = new Scanner(System.in);
         Command command;
         while(true) {
-            String commandLine = s.nextLine();
-            String[] args = commandLine.split(" ");
-            if (this.commands.containsKey(args[0]))
+            String c = s.next();
+            if (this.commands.containsKey(c))
             {
                 try
                 {
-                    command = this.commands.get(args[0]);
-                    command.execute(Arrays.stream(args).skip(1).toArray(String[]::new));
+                    command = this.commands.get(c);
+                    Scanner args = new Scanner(s.nextLine());
+                    command.execute(args);
                 }
-                catch (IOException e)
+                catch (JSONException e)
                 {
                     System.out.println(e.getMessage());
                 }
             }
-            else System.out.println("Invalid command. Use 'help' for help.");
+            else {
+                s.nextLine();
+                System.out.println("Invalid command. Use 'help' for help.");
+            }
         }
+
     }
+
+    /**
+     * Метод, зареждащ командите в списъка с команди.
+     */
     private void loadCommands() {
         this.commands.put("open", new OpenCommand(this.manager));
         this.commands.put("close", new CloseCommand(this.manager));

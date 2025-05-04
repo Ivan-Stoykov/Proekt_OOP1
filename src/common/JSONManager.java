@@ -1,8 +1,6 @@
 package common;
 
 import java.io.*;
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.util.*;
 
 public class JSONManager {
@@ -188,18 +186,31 @@ public class JSONManager {
 
     public void move(String from, String to)
     {
-        openFile(from);
-        if (isFileSelected)
+        Object currentObject = findKey(from);
+        String[] objects  = from.split("/");
+        String[] objects1  = to.split("/");
+        if (currentObject instanceof HashMap && ((HashMap)currentObject).containsKey("\"" + objects[objects.length-1] + "\""))
         {
-            try(BufferedReader reader = new BufferedReader(new FileReader(jsonFile)))
-            {
-                StringBuilder content = new StringBuilder(reader.readLine());
-                create(to, content.toString());
+            currentObject = ((HashMap)currentObject).get(("\"" + objects[objects.length-1] + "\""));
+        }
+
+
+        if (((HashMap)findKey(to)).containsKey("\"" + objects[objects.length-1] + "\"")&&((HashMap)findKey(to)).containsKey("\"" + objects1[objects1.length-1] + "\""))
+        {
+            boolean inQuotes=false;
+            StringBuilder text = new StringBuilder();
+            for (int i = 0; i < currentObject.toString().length(); i++) {
+                if (currentObject.toString().charAt(i) == '"') inQuotes = !inQuotes;
+                if (currentObject.toString().charAt(i) == ' ' && !inQuotes) continue;
+                if (currentObject.toString().charAt(i) == '=' && !inQuotes){
+                    text.append(':');
+                    continue;
+                }
+                text.append(currentObject.toString().charAt(i));
             }
-            catch (Exception e)
-            {
-                System.out.println(e.getMessage());
-            }
+            delete(from);
+            create(to + "/" + objects[objects.length-1], text.toString());
+            System.out.println("Moved object \"" + objects[objects.length-1] + "\" to " + to);
         }
 
     }
@@ -226,13 +237,19 @@ public class JSONManager {
     {
         String[] objects  = path.split("/");
         Object currentObject = findKey(path);
+        boolean inQuotes=false;
+        StringBuilder tempText = new StringBuilder();
+        for (int i = 0; i < text.length(); i++) {
+            if (text.charAt(i) == '"') inQuotes = !inQuotes;
+            if (text.charAt(i) == ' ' && !inQuotes) continue;
+            tempText.append(text.charAt(i));
+        }
         if (currentObject instanceof HashMap && ((HashMap)currentObject).containsKey("\"" + objects[objects.length-1] + "\"")) {
-            validation.setJson(text);
+            validation.setJson(tempText.toString());
             if (validation.validate())
             {
-                ((HashMap)currentObject).put("\"" + objects[objects.length-1] + "\"",jsonSetter.parseJson(text) );
+                ((HashMap)currentObject).put("\"" + objects[objects.length-1] + "\"",jsonSetter.parseJson(tempText.toString()) );
                 System.out.println("New value set for object: \"" + objects[objects.length-1] + "\".");
-                System.out.println(json);
             }
         }
         else System.out.println("Object not found");
@@ -243,6 +260,13 @@ public class JSONManager {
         boolean checked = false;
         String[] objects  = path.split("/");
         Object currentObject = json;
+        boolean inQuotes=false;
+        StringBuilder tempText = new StringBuilder();
+        for (int i = 0; i < text.length(); i++) {
+            if (text.charAt(i) == '"') inQuotes = !inQuotes;
+            if (text.charAt(i) == ' ' && !inQuotes) continue;
+            tempText.append(text.charAt(i));
+        }
         for (int i = 0; i< objects.length-1; i++)
         {
             if (currentObject instanceof HashMap && ((HashMap)currentObject).containsKey("\"" + objects[i] + "\""))
@@ -269,22 +293,22 @@ public class JSONManager {
         else
         {
 
-                validation.setJson(text);
-                if (validation.validate()) ((HashMap)currentObject).put("\"" + objects[objects.length-1] + "\"", jsonSetter.parseJson(text));
+                validation.setJson(tempText.toString());
+                if (validation.validate()) ((HashMap)currentObject).put("\"" + objects[objects.length-1] + "\"", jsonSetter.parseJson(tempText.toString()));
             }
         }else if (!checked)System.out.println(objects[objects.length-1] + " exists and is not an object.");
     }
 
-    public void delete(String path)
+    public boolean delete(String path)
     {
         String[] objects  = path.split("/");
         Object currentObject = findKey(path);
         if (currentObject instanceof HashMap)
         {
             ((HashMap) currentObject).remove("\"" + objects[objects.length-1] + "\"");
-            System.out.println("Deleted object: \"" + objects[objects.length-1] + "\".");
+            return true;
         }
-        else System.out.println("Object does not exist");
+        else return false;
     }
 
     public void save(String path) {
@@ -297,18 +321,14 @@ public class JSONManager {
         {
             if (path.isBlank()) path = selectedFile.getParent();
             if (name.isBlank()) name = selectedFile.getName();
-            path += "/" + name;
+            path += "\\" + name;
             try
             {
                 File selectFile = new File(path);
-                if (!selectFile.createNewFile()) {
-                    System.out.println("File already exists: " + selectFile.getName());
-                } else {
-                    BufferedWriter writer = new BufferedWriter(new FileWriter(selectFile));
-                    writer.write(printFile());
-                    writer.close();
-                    System.out.println("File saved as " + name + " at " + path);
-                }
+                BufferedWriter writer = new BufferedWriter(new FileWriter(selectFile));
+                writer.write(printFile());
+                writer.close();
+                System.out.println("File saved as " + name + " at " + path);
             }
             catch(IOException e)
             {

@@ -1,22 +1,40 @@
 package commands;
 
+import common.JSONException;
 import common.JSONManager;
+import java.util.Scanner;
 
-import java.io.IOException;
-
+/**
+ * Клас, който имплементира команда за изтриване на елемент в JSON файл.
+ */
 public class DeleteCommand implements Command{
     private JSONManager manager;
     public DeleteCommand(JSONManager manager) {
         this.manager = manager;
     }
+
+    /**
+     * Метод, който изпълнява командата за изтриване на елемент в JSON файл.
+     * Изисква един параметър:
+     * <ol>
+     *     <li>Път на елемент за изтриване</li>
+     * </ol>
+     * @param args Аргументи, подадени от менюто.
+     * @throws JSONException
+     */
     @Override
-    public void execute(String... command) throws IOException {
-        if (command.length ==1)
+    public void execute(Scanner args) throws JSONException {
+        if (args.hasNext())
         {
-            String path = command[0];
-            manager.delete(path);
+            String path = args.next();
+            String[] objects  = path.split("/");
+            if (manager.delete(path))
+            {
+                System.out.println("Deleted object: \"" + objects[objects.length-1] + "\".");
+            }
+            else throw new JSONException("Object does not exist");
         }
-        else System.out.println("Command 'delete' expects 1 argument");
+        else throw new JSONException("Command 'delete' expects 1 argument");
 
     }
 }

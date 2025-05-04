@@ -1,8 +1,5 @@
 package common;
 
-import java.io.File;
-import java.io.IOException;
-
 public class Validation {
     private String json;
     private int index;

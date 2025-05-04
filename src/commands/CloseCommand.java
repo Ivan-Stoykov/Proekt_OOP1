@@ -1,9 +1,12 @@
 package commands;
 
+import common.JSONException;
 import common.JSONManager;
+import java.util.Scanner;
 
-import java.io.IOException;
-
+/**
+ * Клас, който имплементира команда за затваряне на JSON файл.
+ */
 public class CloseCommand implements Command {
     private JSONManager manager;
 
@@ -11,12 +14,17 @@ public class CloseCommand implements Command {
         this.manager = manager;
     }
 
+    /**
+     * Метод, който изпълнява командата за затваряне на файл.
+     * @param args Аргументи, подадени от менюто.
+     * @throws JSONException Обработва грешки, възникнали по време на изпълнение.
+     */
     @Override
-    public void execute(String... command) throws IOException {
-        if (command.length ==0)
+    public void execute(Scanner args) throws JSONException {
+        if (!args.hasNext())
         {
             manager.closeFile();
         }
-        else System.out.println("Command 'close' doesn't expect arguments");
+        else throw new JSONException("Command 'close' doesn't expect arguments");
     }
 }

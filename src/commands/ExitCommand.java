@@ -1,18 +1,18 @@
 package commands;
 
-import common.JSONManager;
+import java.util.Scanner;
 
-import java.io.IOException;
-
+/**
+ * Клас, който имплементира команда за излизане от програмата.
+ */
 public class ExitCommand implements Command{
+    /**
+     * Метод, който изпълнява командата за излизане от програмата.
+     * @param args Аргументи, подадени от менюто (не са нужни в случая).
+     */
     @Override
-    public void execute(String... command) throws IOException {
-        if (command.length==0)
-        {
+    public void execute(Scanner args) {
             System.out.println("Exiting program.");
             System.exit(0);
-        }
-        else System.out.println("Command 'exit' doesn't expect arguments");
-
     }
 }

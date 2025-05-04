@@ -1,12 +1,17 @@
 package commands;
 
-import java.io.IOException;
+import java.util.Scanner;
 
+/**
+ * Клас, който имплементира команда за помощ с приложението.
+ */
 public class HelpCommand implements Command{
+    /**
+     * Метод, който изпълнява командата за помощ с приложението.
+     * @param args Аргументи, подадени от менюто (не са нужни в случая).
+     */
     @Override
-    public void execute(String... command) throws IOException {
-        if (command.length == 0)
-        {
+    public void execute(Scanner args) {
             System.out.println("open <path>: Opens a file to work from.");
             System.out.println("close: Closes the currently opened file.");
             System.out.println("save <path>: Saves current file.");
@@ -19,8 +24,6 @@ public class HelpCommand implements Command{
             System.out.println("delete <path>: Deletes element in JSON file.");
             System.out.println("move <from> <to>: Moves elements in JSON file.");
             System.out.println("exit: Exits program.");
-        }
-        else System.out.println("Command 'help' doesn't expect arguments");
 
     }
 }

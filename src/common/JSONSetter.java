@@ -3,7 +3,16 @@ package common;
 import java.util.ArrayList;
 import java.util.HashMap;
 
+/**
+ * Клас, който създава JSON обект от подаден символен низ.
+ */
 public class JSONSetter {
+
+    /**
+     * Метод, който създава JSON обект от подаден символен низ.
+     * @param json символен низ, от който при валиден JSON формат се създава обект.
+     * @return обект от тип JSON.
+     */
     public Object parseJson(String json) {
         if (json.startsWith("[")) {
             return parseArray(json.substring(1, json.length() - 1));
@@ -14,6 +23,11 @@ public class JSONSetter {
         }
     }
 
+    /**
+     * Метод, който създава JSON обект със стойност масив от подаден символен низ.
+     * @param content символен низ, от който при валиден JSON формат се създава масив.
+     * @return масив от обекти.
+     */
     private ArrayList<Object> parseArray(String content) {
         ArrayList<Object> result = new ArrayList<>();
         int i = 0;
@@ -56,6 +70,11 @@ public class JSONSetter {
         return result;
     }
 
+    /**
+     * Метод, който създава JSON обект със обекти ключ-стойност от подаден символен низ.
+     * @param content символен низ, от който при валиден JSON формат се създават обекти ключ-стойност.
+     * @return обект с ключ-стойност.
+     */
     private HashMap<String, Object> parseObject(String content) {
         HashMap<String, Object> map = new HashMap<>();
         int i = 0;
@@ -103,6 +122,11 @@ public class JSONSetter {
         return map;
     }
 
+    /**
+     * Метод, който създава JSON обект със стойност от подадения символен низ.
+     * @param value стойност от подадения символен низ.
+     * @return Обект със стойност от подадения символен низ,
+     */
     private Object parseValue(String value) {
         if (value.equals("null")) return null;
         else if (value.equals("true") || value.equals("false")) return Boolean.parseBoolean(value);

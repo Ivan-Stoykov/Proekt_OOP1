@@ -20,7 +20,7 @@ public class DeleteCommand implements Command{
      *     <li>Път на елемент за изтриване</li>
      * </ol>
      * @param args Аргументи, подадени от менюто.
-     * @throws JSONException
+     * @throws JSONException при неуспешно триене на елемента се извежда съобщение.
      */
     @Override
     public void execute(Scanner args) throws JSONException {

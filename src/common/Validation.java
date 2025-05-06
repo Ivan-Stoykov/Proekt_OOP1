@@ -1,18 +1,32 @@
 package common;
 
+/**
+ * Клас, който валидира дали даден символен низ е във JSON формат.
+ */
 public class Validation {
     private String json;
     private int index;
 
+    /**
+     * Конструктор, който задава начална стойност на индекса.
+     */
     public Validation() {
         this.index = 0;
     }
 
+    /**
+     * Метод, задаващ символния низ за валидиране.
+     * @param json символен низ за валидиране.
+     */
     public void setJson(String json) {
         this.json = json;
         this.index = 0;
     }
 
+    /**
+     * Метод, валидиращ вече въведения символен низ.
+     * @return Валидност на символен низ.
+     */
     public boolean validate()
     {
         try
@@ -25,6 +39,10 @@ public class Validation {
         }
     }
 
+    /**
+     * Метод за валидиране на стойност от подадения символен низ.
+     * @throws JSONException при невалидна стойност или когато индексът излезе от обхвата на стойността се извежда съобщение.
+     */
     private void validateValue() throws JSONException
     {
         if (index >= json.length()) throw new JSONException("Unexpected end of input at index " + index);
@@ -61,6 +79,10 @@ public class Validation {
         throw new JSONException("Invalid value at index " + index);
     }
 
+    /**
+     * Валидира стойността, когато тя е символен низ в зададения символен низ.
+     * @throws JSONException при неотворен или незатворен символен низ се извежда съобщение.
+     */
     private void validateString() throws JSONException
     {
         if (json.charAt(index) != '"') throw new JSONException("Expected '\"' at index " + index);
@@ -73,6 +95,10 @@ public class Validation {
         throw new JSONException("Unclosed string at index " + index);
     }
 
+    /**
+     * Валидира стойността, когато тя е число в зададения символен низ.
+     * @throws JSONException при невалидна числова стойност се извежда съобщение.
+     */
     private void validateDigit() throws JSONException
     {
         if (json.charAt(index) == '-') index++;
@@ -86,6 +112,10 @@ public class Validation {
         }
     }
 
+    /**
+     * Валидира стойността, когато тя е масив в зададения символен низ.
+     * @throws JSONException при неотворен или незатворен масив извежда съобщение
+     */
     private void validateArray() throws JSONException
     {
         if (json.charAt(index) != '[') throw new JSONException("Expected '[' at index " + index);
@@ -109,6 +139,10 @@ public class Validation {
         }
     }
 
+    /**
+     * Валидира стойността, когато тя е обект от ключ-стойности в зададения символен низ.
+     * @throws JSONException при неотворен или незатворен обект и при грешка в ключа на обекта извежда съобщение.
+     */
     private void validateObject() throws JSONException
     {
         if (json.charAt(index) != '{') throw new JSONException("Expected '{' at index " + index);

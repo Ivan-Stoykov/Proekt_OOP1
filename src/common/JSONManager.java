@@ -3,6 +3,9 @@ package common;
 import java.io.*;
 import java.util.*;
 
+/**
+ * Клас, който съдържа всички команди на приложението.
+ */
 public class JSONManager {
 
     private File jsonFile;
@@ -13,6 +16,9 @@ public class JSONManager {
     private Object json;
     private JSONSetter jsonSetter;
 
+    /**
+     * Конструктор, който задава временен файл за използване и ивзиква класовете {@code Validation} и {@code JSONSetter}
+     */
     public JSONManager() {
         jsonFile = new File("temp.txt");
         this.isFileSelected = false;
@@ -21,7 +27,12 @@ public class JSONManager {
         jsonSetter = new JSONSetter();
     }
 
-    public void openFile(String path)
+    /**
+     * Метод, който отваря и чете JSON файл, валидира го и го записва във временен файл и в паметта на програмата.
+     * @param path път на JSON файл за четене.
+     * @throws JSONException при възникване на грешка по време на четене се извежда съобщение.
+     */
+    public void openFile(String path)throws JSONException
     {
         boolean openQuotes = false;
         selectedFile = new File(path);
@@ -57,11 +68,16 @@ public class JSONManager {
                 System.out.println("Opened " + filename);
             }
         }
-        else System.out.println("Could not find that file. Try again");
+        else throw new JSONException("Could not find that file. Try again");
 
     }
 
-    public boolean validate()
+    /**
+     * Метод, който валидира записа във временния файл дали е в JSON формат
+     * @return Валидност на временния файл.
+     * @throws JSONException при възникване на грешка по време на четене се извежда съобщение.
+     */
+    public boolean validate() throws JSONException
     {
         try
         {
@@ -71,12 +87,15 @@ public class JSONManager {
         }
         catch (IOException e)
         {
-            System.out.println(e.getMessage());
+            throw new JSONException(e.getMessage());
         }
-        return false;
     }
 
-    public void setJson()
+    /**
+     * Метод, който чете записа във временния файл и го записва като JSON обект в паметта.
+     * @throws JSONException при възникване на грешка по време на четене се извежда съобщение.
+     */
+    private void setJson()throws JSONException
     {
         try
         {
@@ -85,11 +104,16 @@ public class JSONManager {
         }
         catch (IOException e)
         {
-            System.out.println(e.getMessage());
+            throw new JSONException(e.getMessage());
         }
     }
 
-    public String printFile()
+    /**
+     * Метод, който извежда JSON обекта от паметта в конзолата в четим вид.
+     * @return JSON обекта в четим вид.
+     * @throws JSONException при неотворен файл се извежда съобщение.
+     */
+    public String printFile() throws JSONException
     {
         if (isFileSelected)
         {
@@ -124,7 +148,11 @@ public class JSONManager {
 
                         }
                         else if (lineChars[i].equals(":"))content.append(lineChars[i] + " ");
-                        else if (lineChars[i].equals(","))
+                        else if (lineChars[i].equals("\"")){
+                            inQuotes = !inQuotes;
+                            content.append("\"");
+                        }
+                        else if (lineChars[i].equals(",") && !inQuotes)
                         {
                             content.append(",\n");
                             addTabs(tabs, content);
@@ -133,10 +161,14 @@ public class JSONManager {
                     }
             return content.toString();
         }
-        else System.out.print("Please open a file first");
-        return "";
+        else throw new JSONException("Please open a file first");
     }
 
+    /**
+     * Метод, който добавя нужни табулации към символен низ.
+     * @param tabs брой табулации.
+     * @param content символен низ, към който да се прибавят табулациите.
+     */
     private void addTabs(int tabs, StringBuilder content)
     {
         for (int i = 0; i < tabs; i++) {
@@ -144,14 +176,23 @@ public class JSONManager {
         }
     }
 
-    public void closeFile()
+    /**
+     * Метод, затварящ текущо отворения файл.
+     * @throws JSONException при проба на затваряне, когато не е отворен файл се изписва съобщение.
+     */
+    public void closeFile() throws JSONException
     {
         if (isFileSelected) System.out.println("Closed " + filename);
-        else System.out.println("Please open a file first");
+        else throw new JSONException("Please open a file first");
         this.isFileSelected = false;
     }
 
-    public void search(String key)
+    /**
+     * Метод, който търси дали има записани данни под подадения ключ.
+     * @param key ключ за търсене.
+     * @throws JSONException когато JSON файла не съдържа обекти или няма обекта под ключа на търсене се извежда съобщение.
+     */
+    public void search(String key) throws JSONException
     {
         if (json instanceof HashMap)
         {
@@ -179,12 +220,18 @@ public class JSONManager {
                 }
                 else System.out.println(((HashMap) json).get(key));
             }
-            else System.out.println("This JSON object doesn't contain key: " + key);
+            else throw new JSONException("This JSON object doesn't contain key: " + key);
         }
-        else System.out.println("This JSON object doesn't have objects inside.");
+        else throw new JSONException("This JSON object doesn't have objects inside.");
     }
 
-    public void move(String from, String to)
+    /**
+     * Метод, който мести обект от JSON файла от пътя {@code from} към пътя {@code to}.
+     * @param from начален път на обекта.
+     * @param to път, на който да се премести обекта.
+     * @throws JSONException при възникване на грешка при преместване се извежда съобщение.
+     */
+    public void move(String from, String to)throws JSONException
     {
         Object currentObject = findKey(from);
         String[] objects  = from.split("/");
@@ -194,8 +241,7 @@ public class JSONManager {
             currentObject = ((HashMap)currentObject).get(("\"" + objects[objects.length-1] + "\""));
         }
 
-
-        if (((HashMap)findKey(to)).containsKey("\"" + objects[objects.length-1] + "\"")&&((HashMap)findKey(to)).containsKey("\"" + objects1[objects1.length-1] + "\""))
+        if (((HashMap)findKey(from)).containsKey("\"" + objects[objects.length-1] + "\"")&&((HashMap)findKey(to)).containsKey("\"" + objects1[objects1.length-1] + "\""))
         {
             boolean inQuotes=false;
             StringBuilder text = new StringBuilder();
@@ -214,6 +260,12 @@ public class JSONManager {
         }
 
     }
+
+    /**
+     * Метод, който търси и връща обект по даден ключ.
+     * @param path път на обекта.
+     * @return Търсения обект.
+     */
     private Object findKey(String path)
     {
         boolean foundKey = true;
@@ -233,7 +285,13 @@ public class JSONManager {
         return null;
     }
 
-    public void set(String path, String text)
+    /**
+     * Метод, който задава нова стойност на обекта, намиращ се на подадения път.
+     * @param path път на обекта за промяна на стойност.
+     * @param text нова стойност (символен низ в JSON формат).
+     * @throws JSONException при невъзможност за намиране на обекта се извежда съобщение.
+     */
+    public void set(String path, String text) throws JSONException
     {
         String[] objects  = path.split("/");
         Object currentObject = findKey(path);
@@ -252,12 +310,17 @@ public class JSONManager {
                 System.out.println("New value set for object: \"" + objects[objects.length-1] + "\".");
             }
         }
-        else System.out.println("Object not found");
+        else throw new JSONException("Object not found");
     }
 
-    public void create(String path, String text)
+    /**
+     * Метод, който създава нов обект от тип JSON от подаден символен низ на подаден път
+     * @param path път, където да се създаде новия обект.
+     * @param text стойност на обекта (символен низ във формат JSON)
+     * @throws JSONException при невъзможност на създаване на обект се извежда съобщение.
+     */
+    public void create(String path, String text) throws JSONException
     {
-        boolean checked = false;
         String[] objects  = path.split("/");
         Object currentObject = json;
         boolean inQuotes=false;
@@ -279,26 +342,33 @@ public class JSONManager {
                      currentObject = ((HashMap)currentObject).get("\"" + objects[i] + "\"");
                 }
                 else {
-                    checked = true;
-                    System.out.println(objects[i-1] + " exists and is not an object.");
+                    throw new JSONException(objects[i-1] + " exists and is not an object.");
                 }
 
             }
         }
 
         if (currentObject instanceof HashMap)
-        {if ( ((HashMap)currentObject).containsKey(objects[objects.length-1])){
-            System.out.println("Element"+objects[objects.length-1]+" already exists");
-        }
-        else
         {
-
+            if ( ((HashMap)currentObject).containsKey(objects[objects.length-1]))
+            {
+            throw new JSONException("Element"+objects[objects.length-1]+" already exists");
+            }
+            else
+            {
                 validation.setJson(tempText.toString());
                 if (validation.validate()) ((HashMap)currentObject).put("\"" + objects[objects.length-1] + "\"", jsonSetter.parseJson(tempText.toString()));
             }
-        }else if (!checked)System.out.println(objects[objects.length-1] + " exists and is not an object.");
+        }
+        else
+            throw new JSONException(objects[objects.length-1] + " exists and is not an object.");
     }
 
+    /**
+     * Метод, който изтрива JSON обекта на подадения път.
+     * @param path път на JSON обект за триене.
+     * @return успех на триене на обекта.
+     */
     public boolean delete(String path)
     {
         String[] objects  = path.split("/");
@@ -311,11 +381,22 @@ public class JSONManager {
         else return false;
     }
 
-    public void save(String path) {
+    /**
+     * Метод, който запазва промените във файл със същото име на подадения път. Използва {@code saveas} метод.
+     * @param path път, където да се запише файла. При невъведен път се записва на текущия път на файла.
+     * @throws JSONException при грешка по време на записване на файла се извежда съобщение.
+     */
+    public void save(String path)throws JSONException {
         saveAs("", path);
     }
 
-    public void saveAs(String name, String path)
+    /**
+     * Метод, който запазва промените във файл със подадено име на подаден път.
+     * @param name име на новия файл.
+     * @param path път, където да се запише файла. При невъведен път се записва на текущия път на файла.
+     * @throws JSONException при грешка по време на записване на файла се извежда съобщение.
+     */
+    public void saveAs(String name, String path)throws JSONException
     {
         if (isFileSelected)
         {
@@ -332,7 +413,7 @@ public class JSONManager {
             }
             catch(IOException e)
             {
-                System.out.println(e.getMessage());
+                throw new JSONException(e.getMessage());
             }
         }
     }

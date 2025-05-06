@@ -1,5 +1,6 @@
 package commands;
 
+import common.JSONException;
 import common.JSONManager;
 import java.util.Scanner;
 
@@ -19,9 +20,10 @@ public class SaveCommand implements Command{
      *     <li>Път, на който да се запази файлът</li>
      * </ol>
      * @param args Аргументи, подадени от менюто.
+     * @throws JSONException Обработване на възникнали грешки по време на изпълнение.
      */
     @Override
-    public void execute(Scanner args) {
+    public void execute(Scanner args)throws JSONException {
         if (args.hasNext())
         {
             String filepath = args.next();

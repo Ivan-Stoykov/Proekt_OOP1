@@ -1,5 +1,9 @@
 package common;
 
+import JSON.JSONElement;
+import JSON.JSONObject;
+import JSON.JSONString;
+
 import java.io.*;
 import java.util.*;
 
@@ -13,7 +17,7 @@ public class JSONManager {
     private boolean isFileSelected;
     private String filename;
     private Validation validation;
-    private Object json;
+    private JSONElement json;
     private JSONSetter jsonSetter;
 
     /**
@@ -194,31 +198,17 @@ public class JSONManager {
      */
     public void search(String key) throws JSONException
     {
-        if (json instanceof HashMap)
+        if (json.getType().equals("Object"))
         {
             key = "\"" + key + "\"";
-            if (((HashMap<String, Object>) json).containsKey(key))
+            JSONString jkey = new JSONString(key);
+            if (((JSONObject) json).getValue().containsKey(jkey))
             {
-                if (((HashMap) json).get(key) instanceof HashMap)
+                if (((JSONObject) json).getValue().get(jkey).getType().equals("Object"))
                 {
-                    Set<Object> list  = ((HashMap) ((HashMap) json).get(key)).entrySet();
-                    for (Object value : list)
-                    {
-                        boolean inQuotes=false;
-                        StringBuilder text = new StringBuilder();
-                        for (int i = 0; i < value.toString().length(); i++) {
-                            if (value.toString().charAt(i) == '"') inQuotes = !inQuotes;
-                            if (value.toString().charAt(i) == ' ' && !inQuotes) continue;
-                            if (value.toString().charAt(i) == '=' && !inQuotes){
-                                text.append(':').append(' ');
-                                continue;
-                            }
-                            text.append(value.toString().charAt(i));
-                        }
-                        System.out.println(text);
-                    }
+                    ((JSONObject) ((JSONObject) json).getValue().get(jkey)).listValues();
                 }
-                else System.out.println(((HashMap) json).get(key));
+                else System.out.println(((JSONObject) json).getValue().get(jkey));
             }
             else throw new JSONException("This JSON object doesn't contain key: " + key);
         }
@@ -233,29 +223,30 @@ public class JSONManager {
      */
     public void move(String from, String to)throws JSONException
     {
-        Object currentObject = findKey(from);
+        JSONElement currentObject = findKey(from);
         String[] objects  = from.split("/");
         String[] objects1  = to.split("/");
-        if (currentObject instanceof HashMap && ((HashMap)currentObject).containsKey("\"" + objects[objects.length-1] + "\""))
+        if (currentObject.getType().equals("Object") && ((JSONObject)currentObject).getValue().containsKey(new JSONString("\"" + objects[objects.length-1] + "\"")))
         {
-            currentObject = ((HashMap)currentObject).get(("\"" + objects[objects.length-1] + "\""));
+            currentObject = ((JSONObject)currentObject).getValue().get(new JSONString("\"" + objects[objects.length-1] + "\""));
         }
 
-        if (((HashMap)findKey(from)).containsKey("\"" + objects[objects.length-1] + "\"")&&((HashMap)findKey(to)).containsKey("\"" + objects1[objects1.length-1] + "\""))
+        if (((JSONObject)findKey(from)).getValue().containsKey(new JSONString("\"" + objects[objects.length-1] + "\""))
+                &&((JSONObject)findKey(to)).getValue().containsKey(new JSONString("\"" + objects1[objects1.length-1] + "\"")))
         {
-            boolean inQuotes=false;
-            StringBuilder text = new StringBuilder();
-            for (int i = 0; i < currentObject.toString().length(); i++) {
-                if (currentObject.toString().charAt(i) == '"') inQuotes = !inQuotes;
-                if (currentObject.toString().charAt(i) == ' ' && !inQuotes) continue;
-                if (currentObject.toString().charAt(i) == '=' && !inQuotes){
-                    text.append(':');
-                    continue;
-                }
-                text.append(currentObject.toString().charAt(i));
-            }
+//            boolean inQuotes=false;
+//            StringBuilder text = new StringBuilder();
+//            for (int i = 0; i < currentObject.toString().length(); i++) {
+//                if (currentObject.toString().charAt(i) == '"') inQuotes = !inQuotes;
+//                if (currentObject.toString().charAt(i) == ' ' && !inQuotes) continue;
+//                if (currentObject.toString().charAt(i) == '=' && !inQuotes){
+//                    text.append(':');
+//                    continue;
+//                }
+//                text.append(currentObject.toString().charAt(i));
+
             delete(from);
-            create(to + "/" + objects[objects.length-1], text.toString());
+            create(to + "/" + objects[objects.length-1], currentObject.toString());
             System.out.println("Moved object \"" + objects[objects.length-1] + "\" to " + to);
         }
 
@@ -266,15 +257,15 @@ public class JSONManager {
      * @param path път на обекта.
      * @return Търсения обект.
      */
-    private Object findKey(String path)
+    private JSONElement findKey(String path)
     {
         boolean foundKey = true;
         String[] objects  = path.split("/");
-        Object currentObject = json;
+        JSONElement currentObject = json;
         for (int i = 0; i< objects.length-1; i++)
         {
-            if (((HashMap)currentObject).containsKey("\"" + objects[i] + "\"") && currentObject instanceof HashMap)
-                currentObject = ((HashMap)currentObject).get("\"" + objects[i] + "\"");
+            if (currentObject.getType().equals("Object") && ((JSONObject)currentObject).getValue().containsKey(new JSONString("\"" + objects[i] + "\"")))
+                currentObject = ((JSONObject)currentObject).getValue().get(new JSONString("\"" + objects[i] + "\""));
             else
             {
                 foundKey = false;
@@ -294,7 +285,7 @@ public class JSONManager {
     public void set(String path, String text) throws JSONException
     {
         String[] objects  = path.split("/");
-        Object currentObject = findKey(path);
+        JSONElement currentObject = findKey(path);
         boolean inQuotes=false;
         StringBuilder tempText = new StringBuilder();
         for (int i = 0; i < text.length(); i++) {
@@ -302,11 +293,11 @@ public class JSONManager {
             if (text.charAt(i) == ' ' && !inQuotes) continue;
             tempText.append(text.charAt(i));
         }
-        if (currentObject instanceof HashMap && ((HashMap)currentObject).containsKey("\"" + objects[objects.length-1] + "\"")) {
+        if (currentObject.getType().equals("Object") && ((JSONObject)currentObject).getValue().containsKey(new JSONString("\"" + objects[objects.length-1] + "\""))) {
             validation.setJson(tempText.toString());
             if (validation.validate())
             {
-                ((HashMap)currentObject).put("\"" + objects[objects.length-1] + "\"",jsonSetter.parseJson(tempText.toString()) );
+                ((JSONObject)currentObject).getValue().put(new JSONString("\"" + objects[objects.length-1] + "\""),jsonSetter.parseJson(tempText.toString()) );
                 System.out.println("New value set for object: \"" + objects[objects.length-1] + "\".");
             }
         }
@@ -322,7 +313,7 @@ public class JSONManager {
     public void create(String path, String text) throws JSONException
     {
         String[] objects  = path.split("/");
-        Object currentObject = json;
+        JSONElement currentObject = json;
         boolean inQuotes=false;
         StringBuilder tempText = new StringBuilder();
         for (int i = 0; i < text.length(); i++) {
@@ -332,14 +323,14 @@ public class JSONManager {
         }
         for (int i = 0; i< objects.length-1; i++)
         {
-            if (currentObject instanceof HashMap && ((HashMap)currentObject).containsKey("\"" + objects[i] + "\""))
-                currentObject = ((HashMap)currentObject).get("\"" + objects[i] + "\"");
+            if (currentObject.getType().equals("Object") && ((JSONObject)currentObject).getValue().containsKey(new JSONString("\"" + objects[i] + "\"")))
+                currentObject = ((JSONObject)currentObject).getValue().get(new JSONString("\"" + objects[i] + "\""));
             else
             {
-                if (currentObject instanceof HashMap)
+                if (currentObject.getType().equals("Object"))
                 {
-                     ((HashMap)currentObject).put("\"" + objects[i] + "\"", jsonSetter.parseJson("{}"));
-                     currentObject = ((HashMap)currentObject).get("\"" + objects[i] + "\"");
+                     ((JSONObject)currentObject).getValue().put(new JSONString("\"" + objects[i] + "\""), jsonSetter.parseJson("{}"));
+                     currentObject = ((JSONObject)currentObject).getValue().get(new JSONString("\"" + objects[i] + "\""));
                 }
                 else {
                     throw new JSONException(objects[i-1] + " exists and is not an object.");
@@ -348,16 +339,16 @@ public class JSONManager {
             }
         }
 
-        if (currentObject instanceof HashMap)
+        if (currentObject.getType().equals("Object"))
         {
-            if ( ((HashMap)currentObject).containsKey(objects[objects.length-1]))
+            if ( ((JSONObject)currentObject).getValue().containsKey(new JSONString(objects[objects.length-1])))
             {
             throw new JSONException("Element"+objects[objects.length-1]+" already exists");
             }
             else
             {
                 validation.setJson(tempText.toString());
-                if (validation.validate()) ((HashMap)currentObject).put("\"" + objects[objects.length-1] + "\"", jsonSetter.parseJson(tempText.toString()));
+                if (validation.validate()) ((JSONObject)currentObject).getValue().put(new JSONString("\"" + objects[objects.length-1] + "\""), jsonSetter.parseJson(tempText.toString()));
             }
         }
         else
@@ -372,10 +363,10 @@ public class JSONManager {
     public boolean delete(String path)
     {
         String[] objects  = path.split("/");
-        Object currentObject = findKey(path);
-        if (currentObject instanceof HashMap)
+        JSONElement currentObject = findKey(path);
+        if (currentObject.getType().equals("Object"))
         {
-            ((HashMap) currentObject).remove("\"" + objects[objects.length-1] + "\"");
+            ((JSONObject) currentObject).getValue().remove(new JSONString("\"" + objects[objects.length-1] + "\""));
             return true;
         }
         else return false;

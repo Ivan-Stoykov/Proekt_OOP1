@@ -1,5 +1,7 @@
 package common;
 
+import JSON.*;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 
@@ -13,7 +15,7 @@ public class JSONSetter {
      * @param json символен низ, от който при валиден JSON формат се създава обект.
      * @return обект от тип JSON.
      */
-    public Object parseJson(String json) {
+    public JSONElement parseJson(String json) {
         if (json.startsWith("[")) {
             return parseArray(json.substring(1, json.length() - 1));
         } else if (json.startsWith("{")) {
@@ -28,8 +30,8 @@ public class JSONSetter {
      * @param content символен низ, от който при валиден JSON формат се създава масив.
      * @return масив от обекти.
      */
-    private ArrayList<Object> parseArray(String content) {
-        ArrayList<Object> result = new ArrayList<>();
+    private JSONArray parseArray(String content) {
+        ArrayList<JSONElement> result = new ArrayList<>();
         int i = 0;
         while (i < content.length()) {
             char c = content.charAt(i);
@@ -67,7 +69,8 @@ public class JSONSetter {
             }
             while (i < content.length() && (content.charAt(i) == ',')) i++;
         }
-        return result;
+
+        return new JSONArray(result);
     }
 
     /**
@@ -75,24 +78,24 @@ public class JSONSetter {
      * @param content символен низ, от който при валиден JSON формат се създават обекти ключ-стойност.
      * @return обект с ключ-стойност.
      */
-    private HashMap<String, Object> parseObject(String content) {
-        HashMap<String, Object> map = new HashMap<>();
+    private JSONObject parseObject(String content) {
+        HashMap<JSONString, JSONElement> map = new HashMap<>();
         int i = 0;
         while (i < content.length()) {
             while (i < content.length() && content.charAt(i) ==' ') i++;
             if (i >= content.length() || content.charAt(i) != '"') break;
             int keyStart = ++i;
             while (i < content.length() && (content.charAt(i) != '"')) i++;
-            String key = "\"" + content.substring(keyStart, i) + "\"";
+            JSONString key = new JSONString("\"" + content.substring(keyStart, i) + "\"");
             while (i < content.length() && (content.charAt(i) != ':')) i++;
             i++;
             char c = content.charAt(i);
-            Object value;
+            JSONElement value;
 
             if (c == '"') {
                 int valStart = ++i;
                 while (i < content.length() && (content.charAt(i) != '"')) i++;
-                value = content.substring(valStart-1, ++i);
+                value = new JSONString(content.substring(valStart-1, ++i));
             } else if (c == '[') {
                 int start = i, brackets = 1;
                 i++;
@@ -119,7 +122,7 @@ public class JSONSetter {
             map.put(key, value);
             while (i < content.length() && (content.charAt(i) == ',')) i++;
         }
-        return map;
+        return new JSONObject(map);
     }
 
     /**
@@ -127,14 +130,10 @@ public class JSONSetter {
      * @param value стойност от подадения символен низ.
      * @return Обект със стойност от подадения символен низ,
      */
-    private Object parseValue(String value) {
-        if (value.equals("null")) return null;
-        else if (value.equals("true") || value.equals("false")) return Boolean.parseBoolean(value);
-        else if (value.charAt(0) == '-' || Character.isDigit(value.charAt(0)))
-        {
-            if (value.contains(".")) return Double.parseDouble(value);
-            else return Integer.parseInt(value);
-        }
-        return value;
+    private JSONElement parseValue(String value) {
+        if (value.equals("null")) return new JSONNull();
+        else if (value.equals("true") || value.equals("false")) return new JSONBoolean(Boolean.parseBoolean(value));
+        else if (value.charAt(0) == '-' || Character.isDigit(value.charAt(0))) return new JSONNumber(Double.parseDouble(value));
+        return new JSONString(value);
     }
 }

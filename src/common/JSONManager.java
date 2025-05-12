@@ -51,12 +51,8 @@ public class JSONManager {
                     String[] lineChars = line.split("");
                     for (int i = 0; i < lineChars.length; i++)
                     {
-                        if (lineChars[i].equals("\"") && !openQuotes) {
-                            openQuotes = true;
-                        }
-                        else if(lineChars[i].equals("\"") && openQuotes)
-                        {
-                            openQuotes = false;
+                        if (lineChars[i].equals("\"")) {
+                            openQuotes = !openQuotes;
                         }
                         if ((lineChars[i].equals(" ")||lineChars[i].equals("\t")) && !openQuotes)continue;
                         else writer.write(lineChars[i]);
@@ -122,19 +118,9 @@ public class JSONManager {
         if (isFileSelected)
         {
             boolean inQuotes=false;
-            StringBuilder text = new StringBuilder();
-            for (int i = 0; i < json.toString().length(); i++) {
-                if (json.toString().charAt(i) == '"') inQuotes = !inQuotes;
-                if (json.toString().charAt(i) == ' ' && !inQuotes) continue;
-                if (json.toString().charAt(i) == '=' && !inQuotes){
-                    text.append(':');
-                    continue;
-                }
-                text.append(json.toString().charAt(i));
-            }
             int tabs = 0;
             StringBuilder content = new StringBuilder();
-                    String[] lineChars = text.toString().split("");
+                    String[] lineChars = json.toString().split("");
                     for (int i = 0; i < lineChars.length; i++)
                     {
                         if (lineChars[i].equals("{") || lineChars[i].equals("["))
@@ -234,17 +220,6 @@ public class JSONManager {
         if (((JSONObject)findKey(from)).getValue().containsKey(new JSONString("\"" + objects[objects.length-1] + "\""))
                 &&((JSONObject)findKey(to)).getValue().containsKey(new JSONString("\"" + objects1[objects1.length-1] + "\"")))
         {
-//            boolean inQuotes=false;
-//            StringBuilder text = new StringBuilder();
-//            for (int i = 0; i < currentObject.toString().length(); i++) {
-//                if (currentObject.toString().charAt(i) == '"') inQuotes = !inQuotes;
-//                if (currentObject.toString().charAt(i) == ' ' && !inQuotes) continue;
-//                if (currentObject.toString().charAt(i) == '=' && !inQuotes){
-//                    text.append(':');
-//                    continue;
-//                }
-//                text.append(currentObject.toString().charAt(i));
-
             delete(from);
             create(to + "/" + objects[objects.length-1], currentObject.toString());
             System.out.println("Moved object \"" + objects[objects.length-1] + "\" to " + to);

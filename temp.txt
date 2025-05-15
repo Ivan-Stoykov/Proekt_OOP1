@@ -1,1 +1,1 @@
-{"glossary":{"title":"example glossary","GlossDiv":{"GlossList":{"GlossEntry":{"GlossSee":"markup","SortAs":"SGML","ID":"SGML","Acronym":"SGML","GlossDef":{"GlossSeeAlso":["GML","XML"],"para":"A meta-markup language, used to create markup languages such as DocBook."},"GlossTerm":"Standard Generalized Markup Language","Abbrev":"ISO 8879: 1986"}},"title":"S"}}}
+{"user":{"id":12345,"username":"johndoe","email":"johndoe@example.com"},"status":"active"}

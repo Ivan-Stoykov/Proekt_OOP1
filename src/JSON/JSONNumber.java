@@ -5,6 +5,7 @@ package JSON;
  */
 public class JSONNumber implements JSONElement{
     private Double value;
+    private boolean isInt;
 
     /**
      * Конструктор, задаващ числовата стойност в JSON.
@@ -12,6 +13,12 @@ public class JSONNumber implements JSONElement{
      */
     public JSONNumber(double value) {
         this.value = value;
+        isInt = false;
+    }
+
+    public JSONNumber(int value) {
+        this.value = (double)value;
+        isInt = true;
     }
 
     /**
@@ -32,6 +39,8 @@ public class JSONNumber implements JSONElement{
      */
     @Override
     public String toString() {
-        return value.toString();
+
+        if (isInt) return ""+value.intValue();
+        else return value.toString();
     }
 }

@@ -133,7 +133,9 @@ public class JSONSetter {
     private JSONElement parseValue(String value) {
         if (value.equals("null")) return new JSONNull();
         else if (value.equals("true") || value.equals("false")) return new JSONBoolean(Boolean.parseBoolean(value));
-        else if (value.charAt(0) == '-' || Character.isDigit(value.charAt(0))) return new JSONNumber(Double.parseDouble(value));
+        else if (value.charAt(0) == '-' || Character.isDigit(value.charAt(0)))
+            if (value.contains(".")) new JSONNumber(Double.parseDouble(value));
+            else new JSONNumber(Integer.parseInt(value));
         return new JSONString(value);
     }
 }

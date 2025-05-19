@@ -102,12 +102,20 @@ public class Validation {
     private void validateDigit() throws JSONException
     {
         if (json.charAt(index) == '-') index++;
+        if (index >= json.length() || !Character.isDigit(json.charAt(index)))
+            throw new JSONException("Invalid number format at index " + index);
         while (index < json.length() && Character.isDigit(json.charAt(index))) index++;
-        if (index < json.length()&& json.charAt(index) == '.')
-        {
+        if (index < json.length() && json.charAt(index) == '.') {
             index++;
             if (index >= json.length() || !Character.isDigit(json.charAt(index)))
-                throw new JSONException("Invalid number format at index " + index);
+                throw new JSONException("Invalid number format at index " + index + " after decimal point");
+            while (index < json.length() && Character.isDigit(json.charAt(index))) index++;
+        }
+        if (index < json.length() && (json.charAt(index) == 'e' || json.charAt(index) == 'E')) {
+            index++;
+            if (index < json.length() && (json.charAt(index) == '+' || json.charAt(index) == '-')) index++;
+            if (index >= json.length() || !Character.isDigit(json.charAt(index)))
+                throw new JSONException("Invalid exponent format at index " + index);
             while (index < json.length() && Character.isDigit(json.charAt(index))) index++;
         }
     }

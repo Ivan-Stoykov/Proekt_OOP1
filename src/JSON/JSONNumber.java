@@ -11,7 +11,7 @@ public class JSONNumber implements JSONElement{
      * Конструктор, задаващ числовата стойност в JSON.
      * @param value Числова стойност.
      */
-    public JSONNumber(double value) {
+    public JSONNumber(Double value) {
         this.value = value;
         isInt = false;
     }

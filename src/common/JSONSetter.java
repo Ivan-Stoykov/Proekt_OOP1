@@ -134,8 +134,23 @@ public class JSONSetter {
         if (value.equals("null")) return new JSONNull();
         else if (value.equals("true") || value.equals("false")) return new JSONBoolean(Boolean.parseBoolean(value));
         else if (value.charAt(0) == '-' || Character.isDigit(value.charAt(0)))
-            if (value.contains(".")) new JSONNumber(Double.parseDouble(value));
-            else new JSONNumber(Integer.parseInt(value));
+        {
+            if (tryNum(value) && !value.contains(".") && !value.contains("e")) return new JSONNumber(Integer.parseInt(value));
+            else if (tryNum(value)) return new JSONNumber(Double.parseDouble(value));
+
+        }
         return new JSONString(value);
+    }
+
+    private boolean tryNum(String value)
+    {
+        try {
+            Double.parseDouble(value);
+            return true;
+        }
+        catch (NumberFormatException e)
+        {
+            return false;
+        }
     }
 }
